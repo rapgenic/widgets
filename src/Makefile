@@ -1,2 +1,2 @@
 all:
-	$(MKOCTFILE) xwidgets.cc
+	$(MKOCTFILE) -lxwidgets __xwidgets_load__.cc

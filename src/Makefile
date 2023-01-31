@@ -1,24 +1,22 @@
-XWIDGETS_SRC = $(shell python generator.py)
-OCTS_SRC = __xwidgets_load__.cc
+.SUFFIXES:
 
-XWIDGETS_DIR = +xwidgets
+OCTS_SRC = __xwidgets_load__.cc
 
 LIBS = -lxwidgets
 
-WIDGETS := $(addprefix $(XWIDGETS_DIR)/,$(XWIDGETS_SRC))
 OCTS = $(OCTS_SRC:.cc=.oct)
+WIDGETS := $(shell python generator.py)
+
 
 all: $(OCTS) $(WIDGETS)
-	$(file > FILES,$(OCTS) $(WIDGETS))
 
 .PHONY: clean
 clean:
 	@rm -rf $(WIDGETS)
 	@rm -rf $(OCTS)
-	@rm -rf FILES
+
+%.m: generator.py Widget.mako
+	python generator.py Widget.mako $@
 
 %.oct: %.cc
 	$(MKOCTFILE) $(LIBS) $< -o $@
-
-+xwidgets/%.m: generator.py Widget.mako
-	python generator.py Widget.mako $@

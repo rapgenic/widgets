@@ -38,20 +38,16 @@
 
 #include <xwidgets/xcommon.hpp>
 
-constexpr inline char const* XWIDGET_CLASS_NAME = "__xwidget_internal__";
-
 class xwidget : public octave::handle_cdef_object, public xw::xcommon
 {
 
 public:
 
-  void put(std::string const&, octave_value const&) override;
-  void mark_as_constructed(octave::cdef_class const& cls) override;
-
-private:
-
   xwidget();
   ~xwidget();
+
+  void put(std::string const&, octave_value const&) override;
+  void mark_as_constructed(octave::cdef_class const& cls) override;
 
   void open();
   void close();
@@ -71,20 +67,6 @@ private:
    * Octave value is automatically converted to a json value
    */
   void notify_frontend(std::string const&, octave_value const&);
-
-public:
-
-  static octave_value_list cdef_constructor(octave::interpreter&, octave_value_list const&, int);
-  static octave_value_list cdef_observe(octave_value_list const&, int);
-  static octave_value_list cdef_display(octave_value_list const&, int);
-  static octave_value_list cdef_id(octave_value_list const&, int);
-  static octave_value_list cdef_on(octave_value_list const&, int);
-
-private:
-
-  template <typename T> friend inline void xw::xwidgets_serialize(T const& value, nl::json& j, xeus::buffer_sequence&);
-
-private:
 
   std::map<std::string, std::list<octave_value>> m_observerCallbacks;
   std::map<std::string, std::list<octave_value>> m_eventCallbacks;
@@ -146,7 +128,7 @@ inline void xwidgets_deserialize_object(octave_value& ov, nl::json const& j, xeu
 
 inline void xwidgets_serialize(octave_classdef const& cdv, nl::json& j, xeus::buffer_sequence&)
 {
-  if (cdv.is_instance_of(XWIDGET_CLASS_NAME))
+  if (cdv.is_instance_of("__xwidget_internal__"))
     j = "IPY_MODEL_" + std::string(get_widget(&cdv)->id());
   else
     warning("xwidget: cannot serialize classdef");
@@ -405,7 +387,52 @@ void xwidget::mark_as_constructed(octave::cdef_class const& cls)
     this->open();
 }
 
-octave_value_list xwidget::cdef_constructor(octave::interpreter& interpreter, octave_value_list const& args, int)
+octave_value_list cdef_observe(octave_value_list const& args, int)
+{
+  // Object reference
+  octave_classdef* obj = args(0).classdef_object_value();
+  // Property to observe
+  std::string pname = args(1).xstring_value("PNAME must be a string with the property name");
+  // Observer callback
+  octave_value fcn = args(2);
+
+  if (!fcn.is_function_handle())
+    error("HANDLE must be a function handle");
+
+  get_widget(obj)->m_observerCallbacks[pname].push_back(fcn);
+
+  return ovl();
+}
+
+octave_value_list cdef_display(octave_value_list const& args, int)
+{
+  get_widget(args(0).classdef_object_value())->display();
+  return ovl();
+}
+
+octave_value_list cdef_id(octave_value_list const& args, int)
+{
+  return ovl(std::string(get_widget(args(0).classdef_object_value())->id()));
+}
+
+octave_value_list cdef_on(octave_value_list const& args, int)
+{
+  // Object reference
+  octave_classdef* obj = args(0).classdef_object_value();
+  // Property to observe
+  std::string event = args(1).xstring_value("EVENT must be a string with the event name");
+  // Observer callback
+  octave_value fcn = args(2);
+
+  if (!fcn.is_function_handle())
+    error("HANDLE must be a function handle");
+
+  get_widget(obj)->m_eventCallbacks[event].push_back(fcn);
+
+  return ovl();
+}
+
+DEFMETHOD_DLD(__xwidget_internal__, interpreter, args, /* nargout */, "")
 {
   // Get a reference to the old object
   octave::cdef_object& obj = args(0).classdef_object_value()->get_object_ref();
@@ -440,63 +467,16 @@ octave_value_list xwidget::cdef_constructor(octave::interpreter& interpreter, oc
   }
 }
 
-octave_value_list xwidget::cdef_observe(octave_value_list const& args, int)
-{
-  // Object reference
-  octave_classdef* obj = args(0).classdef_object_value();
-  // Property to observe
-  std::string pname = args(1).xstring_value("PNAME must be a string with the property name");
-  // Observer callback
-  octave_value fcn = args(2);
-
-  if (!fcn.is_function_handle())
-    error("HANDLE must be a function handle");
-
-  get_widget(obj)->m_observerCallbacks[pname].push_back(fcn);
-
-  return ovl();
-}
-
-octave_value_list xwidget::cdef_display(octave_value_list const& args, int)
-{
-  get_widget(args(0).classdef_object_value())->display();
-  return ovl();
-}
-
-octave_value_list xwidget::cdef_id(octave_value_list const& args, int)
-{
-  return ovl(std::string(get_widget(args(0).classdef_object_value())->id()));
-}
-
-octave_value_list xwidget::cdef_on(octave_value_list const& args, int)
-{
-  // Object reference
-  octave_classdef* obj = args(0).classdef_object_value();
-  // Property to observe
-  std::string event = args(1).xstring_value("EVENT must be a string with the event name");
-  // Observer callback
-  octave_value fcn = args(2);
-
-  if (!fcn.is_function_handle())
-    error("HANDLE must be a function handle");
-
-  get_widget(obj)->m_eventCallbacks[event].push_back(fcn);
-
-  return ovl();
-}
-
 DEFMETHOD_DLD(__xwidgets_load__, interpreter, args, /* nargout */, "")
 {
   octave::cdef_manager& cm = interpreter.get_cdef_manager();
-  octave::cdef_class cls = cm.make_class(XWIDGET_CLASS_NAME, cm.find_class("handle"));
+  octave::cdef_class cls = cm.make_class("__xwidget_internal__", cm.find_class("handle"));
 
-  cls.install_method(cm.make_method(cls, XWIDGET_CLASS_NAME, xwidget::cdef_constructor));
-  cls.install_method(cm.make_method(cls, "observe", xwidget::cdef_observe));
-  cls.install_method(cm.make_method(cls, "display", xwidget::cdef_display));
-  cls.install_method(cm.make_method(cls, "id", xwidget::cdef_id));
-  cls.install_method(cm.make_method(cls, "on", xwidget::cdef_on));
-
-  interpreter.get_symbol_table().install_built_in_function(XWIDGET_CLASS_NAME, cls.get_constructor_function());
+  cls.install_method(cm.make_method(cls, "__xwidget_internal__", F__xwidget_internal__));
+  cls.install_method(cm.make_method(cls, "observe", cdef_observe));
+  cls.install_method(cm.make_method(cls, "display", cdef_display));
+  cls.install_method(cm.make_method(cls, "id", cdef_id));
+  cls.install_method(cm.make_method(cls, "on", cdef_on));
 
   return ovl();
 }

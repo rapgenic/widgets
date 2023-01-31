@@ -41,7 +41,7 @@ from ipywidgets.widgets.trait_types import TypedTuple, CByteMemoryView, Instance
 classdef ${widget_name} < __xwidget_internal__
 	<%self:octavedoc>
 		-*- texinfo -*-
-		@deftypefn {} {@var{w} =} xwidgets.${widget_name} ()
+		@deftypefn {} {@var{w} =} ${widget_name} ()
 
 		% if doc:
 			${doc.split("Parameters")[0]}
@@ -49,7 +49,7 @@ classdef ${widget_name} < __xwidget_internal__
 
 		% for trait_name, trait in traits:
 			% if trait.help:
-				@deftypefn {} {} xwidgets.${widget_name}.${trait_name}
+				@deftypefn {} {} ${widget_name}.${trait_name}
 				${trait.help}
 				@end deftypefn
 			% endif
@@ -87,7 +87,7 @@ classdef ${widget_name} < __xwidget_internal__
 				instance_name = data[2].removesuffix("Model")
 				break
 	%>
-			obj.${trait_name} = xwidgets.${instance_name};
+			obj.${trait_name} = ${instance_name};
 	% elif (type(trait) is TypedTuple and type(trait._trait) is Unicode) or (type(trait) is List and type(trait._trait) is Unicode):
 		% if trait.default() is not None:
 			obj.${trait_name} = {${','.join([f'"{v}"' for v in trait.default()])}};
@@ -157,8 +157,8 @@ classdef ${widget_name} < __xwidget_internal__
 				instance_name = data[2].removesuffix("Model")
 				break
 	%>
-			if !isa(value, "xwidgets.${instance_name}")
-				error("input must be instance of xwidgets.${instance_name}");
+			if !isa(value, "${instance_name}")
+				error("input must be instance of ${instance_name}");
 			else
 	% elif type(trait) is TypedTuple and type(trait._trait) is Unicode:
 			if !iscellstr(value)

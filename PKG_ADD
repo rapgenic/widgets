@@ -1,0 +1,7 @@
+try
+    XOCTAVE;
+catch
+    error("widgets need to run inside a xeus-octave kernel")
+end_try_catch
+
+__xwidgets_load__

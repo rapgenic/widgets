@@ -9,11 +9,13 @@ WIDGETS := $(addprefix $(XWIDGETS_DIR)/,$(XWIDGETS_SRC))
 OCTS = $(OCTS_SRC:.cc=.oct)
 
 all: $(OCTS) $(WIDGETS)
+	$(file > FILES,$(OCTS) $(WIDGETS))
 
 .PHONY: clean
 clean:
 	@rm -rf $(WIDGETS)
 	@rm -rf $(OCTS)
+	@rm -rf FILES
 
 %.oct: %.cc
 	$(MKOCTFILE) $(LIBS) $< -o $@

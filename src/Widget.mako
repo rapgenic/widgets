@@ -43,10 +43,6 @@ classdef ${widget_name} < __xwidget_internal__
 		-*- texinfo -*-
 		@deftypefn {} {@var{w} =} ${widget_name} ()
 
-		% if doc:
-			${doc.split("Parameters")[0]}
-		% endif
-
 		% for trait_name, trait in traits:
 			% if trait.help:
 				@deftypefn {} {} ${widget_name}.${trait_name}
@@ -72,7 +68,7 @@ classdef ${widget_name} < __xwidget_internal__
 	% elif type(trait) is Bool:
 		${trait_name} = ${str(trait.default()).lower()};
 	% else:
-		${trait_name} = []; # null
+		${trait_name} = []; # null (not handled in template)
 	% endif
 % endfor
 	endproperties

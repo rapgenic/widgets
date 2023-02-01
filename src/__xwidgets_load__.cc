@@ -366,6 +366,8 @@ void xwidget::handle_custom_message(nl::json const& jsonmessage)
   else if (jsonmessage.contains("event"))
   {
     std::string event = jsonmessage["event"];
+    std::clog << "Event " << event << " received" << std::endl;
+
     if (this->m_eventCallbacks.count(event))
     {
       for (auto callback : this->m_eventCallbacks[event])
@@ -387,7 +389,7 @@ void xwidget::mark_as_constructed(octave::cdef_class const& cls)
     this->open();
 }
 
-octave_value_list cdef_observe(octave_value_list const& args, int)
+DEFUN_DLD(observe, args, /* nargout */, "")
 {
   // Object reference
   octave_classdef* obj = args(0).classdef_object_value();
@@ -404,18 +406,18 @@ octave_value_list cdef_observe(octave_value_list const& args, int)
   return ovl();
 }
 
-octave_value_list cdef_display(octave_value_list const& args, int)
+DEFUN_DLD(display, args, /* nargout */, "")
 {
   get_widget(args(0).classdef_object_value())->display();
   return ovl();
 }
 
-octave_value_list cdef_id(octave_value_list const& args, int)
+DEFUN_DLD(id, args, /* nargout */, "")
 {
   return ovl(std::string(get_widget(args(0).classdef_object_value())->id()));
 }
 
-octave_value_list cdef_on(octave_value_list const& args, int)
+DEFUN_DLD(on, args, /* nargout */, "")
 {
   // Object reference
   octave_classdef* obj = args(0).classdef_object_value();
@@ -427,6 +429,7 @@ octave_value_list cdef_on(octave_value_list const& args, int)
   if (!fcn.is_function_handle())
     error("HANDLE must be a function handle");
 
+  std::clog << "Registering event handler for event " << event << std::endl;
   get_widget(obj)->m_eventCallbacks[event].push_back(fcn);
 
   return ovl();
@@ -473,10 +476,10 @@ DEFMETHOD_DLD(__xwidgets_load__, interpreter, args, /* nargout */, "")
   octave::cdef_class cls = cm.make_class("__xwidget_internal__", cm.find_class("handle"));
 
   cls.install_method(cm.make_method(cls, "__xwidget_internal__", F__xwidget_internal__));
-  cls.install_method(cm.make_method(cls, "observe", cdef_observe));
-  cls.install_method(cm.make_method(cls, "display", cdef_display));
-  cls.install_method(cm.make_method(cls, "id", cdef_id));
-  cls.install_method(cm.make_method(cls, "on", cdef_on));
+  cls.install_method(cm.make_method(cls, "observe", Fobserve));
+  cls.install_method(cm.make_method(cls, "display", Fdisplay));
+  cls.install_method(cm.make_method(cls, "id", Fid));
+  cls.install_method(cm.make_method(cls, "on", Fon));
 
   return ovl();
 }

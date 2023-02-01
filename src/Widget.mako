@@ -36,7 +36,7 @@ from traitlets import (
 )
 
 from ipywidgets.widgets import Widget
-from ipywidgets.widgets.trait_types import TypedTuple, CByteMemoryView, InstanceDict
+from ipywidgets.widgets.trait_types import TypedTuple, CByteMemoryView, InstanceDict, NumberFormat
 %>
 classdef ${widget_name} < __xwidget_internal__
 	<%self:octavedoc>

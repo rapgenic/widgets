@@ -32,7 +32,7 @@ if __name__ == "__main__":
 		output_name = Path(sys.argv[2]).stem
 
 		for data, klass in widget_list:
-			widget_name = data[2].removesuffix("Model")
+			widget_name = data[2][:-5]
 
 			if widget_name == output_name:
 				# Instanciate dummy widget
@@ -57,5 +57,5 @@ if __name__ == "__main__":
 
 				break
 	else:
-		widget_files = [d[2].removesuffix('Model') + '.m' for d, _ in widget_list]
+		widget_files = [d[2][:-5] + '.m' for d, _ in widget_list]
 		print('\n'.join(widget_files))

@@ -80,7 +80,7 @@ classdef ${widget_name} < __xwidget_internal__
 	<%
 		for data, klass in widget_list:
 			if klass == trait.klass:
-				instance_name = data[2].removesuffix("Model")
+				instance_name = data[2][:-5]
 				break
 	%>
 			obj.${trait_name} = ${instance_name};
@@ -150,7 +150,7 @@ classdef ${widget_name} < __xwidget_internal__
 	<%
 		for data, klass in widget_list:
 			if klass == trait.klass:
-				instance_name = data[2].removesuffix("Model")
+				instance_name = data[2][:-5]
 				break
 	%>
 			if !isa(value, "${instance_name}")
